@@ -334,6 +334,11 @@ static void msm_add_sd_in_position(struct msm_sd_subdev *msm_subdev,
 	struct msm_sd_subdev *temp_sd;
 
 	list_for_each_entry(temp_sd, sd_list, list) {
+		if (temp_sd == msm_subdev) {
+			pr_err("%s :Fail to add the same sd %d\n",
+				__func__, __LINE__);
+			return;
+		}
 		if (msm_subdev->close_seq < temp_sd->close_seq) {
 			list_add_tail(&msm_subdev->list, &temp_sd->list);
 			return;
@@ -587,6 +592,15 @@ static long msm_private_ioctl(struct file *file, void *fh,
 	unsigned int session_id;
 	unsigned int stream_id;
 	unsigned long spin_flags = 0;
+
+	switch(cmd) {
+	case MSM_CAM_V4L2_IOCTL_NOTIFY:
+	case MSM_CAM_V4L2_IOCTL_CMD_ACK:
+	case MSM_CAM_V4L2_IOCTL_NOTIFY_ERROR:
+		break;
+	default:
+		return -ENOTTY;
+	}
 
 	session_id = event_data->session_id;
 	stream_id = event_data->stream_id;

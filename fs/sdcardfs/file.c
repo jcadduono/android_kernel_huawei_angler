@@ -18,6 +18,7 @@
  * General Public License.
  */
 
+#include <linux/fsnotify.h>
 #include "sdcardfs.h"
 #ifdef CONFIG_SDCARD_FS_FADV_NOACTIVE
 #include <linux/backing-dev.h>
@@ -222,7 +223,11 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 	}
 
 	/* save current_cred and override it */
-	OVERRIDE_CRED(sbi, saved_cred, SDCARDFS_I(inode));
+	saved_cred = override_fsids(sbi, SDCARDFS_I(inode)->data);
+	if (!saved_cred) {
+		err = -ENOMEM;
+		goto out_err;
+	}
 
 	file->private_data =
 		kzalloc(sizeof(struct sdcardfs_file_info), GFP_KERNEL);
@@ -243,6 +248,7 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 			fput(lower_file); /* fput calls dput for lower_dentry */
 		}
 	} else {
+		fsnotify_open(lower_file);
 		sdcardfs_set_lower_file(file, lower_file);
 	}
 
@@ -252,7 +258,7 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 		sdcardfs_copy_and_fix_attrs(inode, sdcardfs_lower_inode(inode));
 
 out_revert_cred:
-	REVERT_CRED(saved_cred);
+	revert_fsids(saved_cred);
 out_err:
 	dput(parent);
 	return err;
