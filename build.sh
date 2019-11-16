@@ -19,7 +19,7 @@ RDIR=$(pwd)
 VER=$(cat "$RDIR/VERSION")
 
 # directory containing cross-compile arm64 toolchain
-TOOLCHAIN=$HOME/build/toolchain/gcc-linaro-5.4.1-2017.05-x86_64_aarch64-linux-gnu
+TOOLCHAIN=$HOME/toolchains/gcc-linaro-5.4.1-2017.05-x86_64_aarch64-linux-gnu
 
 CPU_THREADS=$(grep -c "processor" /proc/cpuinfo)
 # amount of cpu threads to use in kernel make process
